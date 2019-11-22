@@ -15,15 +15,15 @@ graph_data_dir <- "graph-data"
 # Graph linear data
 plot_lin <- function(dat) {
   dat %>%
-    pivot_longer(c(x1, x2), names_to = "cov", values_to = "val") %>%
-    ggplot(aes(y, val)) +
+    pivot_longer(c(x1_obs, x2_obs), names_to = "cov", values_to = "val") %>%
+    ggplot(aes(val, y_obs)) +
     dark_theme_bw(verbose = FALSE) +
     theme(
       strip.background = element_rect(fill = NA),
       axis.title.y = element_blank(),
       panel.spacing = unit(0, "null")
     ) +
-    facet_grid(cov ~ filename, scales = "free_y") +
+    facet_grid(cov ~ filename) +
     geom_point(shape = 18)
 }
 

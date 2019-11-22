@@ -38,6 +38,31 @@ fit_lin <- function(lin_data, model_compiled) {
   )
 }
 
+fit_bin <- function(bin_data, model_compiled) {
+  replace_miss <- function(vec) {
+    vec[is.na(vec)] <- 0
+    vec
+  }
+  sampling(
+    model_compiled,
+    data = list(
+      n = nrow(bin_data),
+      y = replace_miss(bin_data$y_obs),
+      x1 = replace_miss(bin_data$x1_obs),
+      x2 = replace_miss(bin_data$x2_obs),
+      n_x1miss = sum(is.na(bin_data$x1_obs)),
+      n_x2miss = sum(is.na(bin_data$x2_obs)),
+      n_ymiss = sum(is.na(bin_data$y_obs)),
+      ind_x1miss = which(is.na(bin_data$x1_obs)),
+      ind_x2miss = which(is.na(bin_data$x2_obs)),
+      y_is_miss = as.integer(is.na(bin_data$y_obs))
+    ),
+    cores = 1,
+    chains = 2,
+    iter = 5e3
+  )
+}
+
 summ_fit <- function(fit) {
   nms <- names(fit)[names(fit) != "lp__"]
   nms <- nms[!str_detect(nms, "\\[")]
@@ -46,6 +71,8 @@ summ_fit <- function(fit) {
     mutate(term = rownames(summ)) %>%
     select(term, everything())
 }
+
+logit <- function(x) log(x / (1 - x))
 
 # Script ======================================================================
 
@@ -77,7 +104,20 @@ lin_x1x2ymiss_comp <- stan_model(file.path(model_dir, "lin_x1x2ymiss.stan"))
 lin_x1x2ymiss_fit <- fit_lin(lin_x1x2ymiss_data, lin_x1x2ymiss_comp)
 summ_fit(lin_x1x2ymiss_fit)
 
-y_reconst <- rstan::extract(lin_x1x2ymiss_fit, "y_reconst")$y_reconst
-which(is.na(lin_x1x2ymiss_data$y_obs))
-hist(y_reconst[, 2], breaks = 100)
-lin_x1x2ymiss_data$y[[2]]
+# Binary no missing
+bin_nonmiss_data <- read_csv(file.path(data_dir, "bin_nonmiss.csv"))
+bin_nonmiss_comp <- stan_model(file.path(model_dir, "bin_nonmiss.stan"))
+
+bin_nonmiss_fit <- fit_bin(bin_nonmiss_data, bin_nonmiss_comp)
+summ_fit(bin_nonmiss_fit)
+
+# Binary with x1, x2 and y missing
+bin_x1x2ymiss_data <- read_csv(file.path(data_dir, "bin_x1x2ymiss.csv"))
+bin_x1x2ymiss_comp <- stan_model(file.path(model_dir, "bin_x1x2ymiss.stan"))
+
+bin_x1x2ymiss_fit <- fit_bin(bin_x1x2ymiss_data, bin_x1x2ymiss_comp)
+summ_fit(bin_x1x2ymiss_fit)
+
+y_pred <- rstan::extract(bin_x1x2ymiss_fit, "y_pred")$y_pred
+logit(bin_x1x2ymiss_data$probs[[1]])
+hist(y_pred[, 1], breaks = 100)

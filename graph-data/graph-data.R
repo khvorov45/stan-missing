@@ -19,12 +19,27 @@ plot_lin <- function(dat) {
     ggplot(aes(val, y_obs)) +
     dark_theme_bw(verbose = FALSE) +
     theme(
+      axis.title.x = element_blank(),
       strip.background = element_rect(fill = NA),
-      axis.title.y = element_blank(),
       panel.spacing = unit(0, "null")
     ) +
     facet_grid(cov ~ filename) +
     geom_point(shape = 18)
+}
+
+# Plots binary data
+plot_bin <- function(dat) {
+  dat %>%
+    pivot_longer(c(x1_obs, x2_obs), names_to = "cov", values_to = "val") %>%
+    ggplot(aes(as.factor(y_obs), val)) +
+    dark_theme_bw(verbose = FALSE) +
+    theme(
+      axis.title.y = element_blank(),
+      strip.background = element_rect(fill = NA),
+      panel.spacing = unit(0, "null")
+    ) +
+    facet_grid(cov ~ filename) +
+    geom_jitter(shape = 18)
 }
 
 # Read one dataframe
@@ -48,3 +63,7 @@ all_data <- map_dfr(all_files, read_one)
 lin_data <- filter(all_data, str_detect(filename, "^lin"))
 lin_plot <- plot_lin(lin_data)
 save_plot(lin_plot, "lin", graph_data_dir)
+
+bin_data <- filter(all_data, str_detect(filename, "^bin"))
+bin_plot <- plot_bin(bin_data)
+save_plot(bin_plot, "bin", graph_data_dir)

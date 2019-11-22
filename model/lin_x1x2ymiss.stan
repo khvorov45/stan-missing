@@ -1,4 +1,4 @@
-// Linear model with missing values on x1 and x2
+// Linear model with missing values on x1, x2 and y
 // Arseniy Khvorov
 // Created 2019/11/22
 // Last edit 2019/11/22

@@ -22,6 +22,17 @@ sim_lin <- function(nsam, b0, b1, b2, res_sd,
   )
 }
 
+sim_bin <- function(nsam, b0, b1, b2,
+                    seed = sample.int(.Machine$integer.max, 1)) {
+  set.seed(seed)
+  tibble(
+    x1 = rnorm(nsam, 0, 2),
+    x2 = rnorm(nsam, 1, 1.5),
+    probs = 1 - 1 / (1 + exp(b0 + b1 * x1 + b2 * x2)),
+    y = rbern(nsam, probs)
+  )
+}
+
 # Adds missing values to generated data
 add_miss <- function(dat, miss_y, miss_x1, miss_x2,
                      seed = sample.int(.Machine$integer.max, 1)) {
@@ -53,3 +64,12 @@ lin_x1x2miss <- lin_nomiss %>% add_miss(0, 0.1, 0.1, 20191122)
 save_csv(lin_x1x2miss, "lin_x1x2miss", data_dir)
 lin_x1x2ymiss <- lin_nomiss %>% add_miss(0.1, 0.1, 0.1, 20191122)
 save_csv(lin_x1x2ymiss, "lin_x1x2ymiss", data_dir)
+
+bin_nomiss <- sim_bin(300, -5, 1.5, 1.5, 20191122) %>% add_miss(0, 0, 0)
+save_csv(bin_nomiss, "bin_nonmiss", data_dir)
+bin_x1miss <- bin_nomiss %>% add_miss(0, 0.1, 0, 20191122)
+save_csv(bin_x1miss, "bin_x1miss", data_dir)
+bin_x1x2miss <- bin_nomiss %>% add_miss(0, 0.1, 0.1, 20191122)
+save_csv(bin_x1x2miss, "bin_x1x2miss", data_dir)
+bin_x1x2ymiss <- bin_nomiss %>% add_miss(0.1, 0.1, 0.1, 20191122)
+save_csv(bin_x1x2ymiss, "bin_x1x2ymiss", data_dir)
